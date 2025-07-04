@@ -1,10 +1,32 @@
 // require(dotenv).config{path: './env'}); -> This will also work fine.
 import dotenv from 'dotenv';
 import mongoDBConnection from './db/index.js';
+import { app } from './app.js'
 
-dotenv.config({
+const result = dotenv.config({
   path: "./.env",
-}); //Do try catch for this also -> using .error and .parsed
+});
+//env is loaded or not.
+if(result.error){
+  throw result.error;
+}else{
+  console.log("Environment varialbes loaded -> ", result.parsed);
+}
 
-mongoDBConnection(); //Connects to database.
+mongoDBConnection() //Its an async connection thats why giving provise.
+.then(() => {
+  console.log("Connected successfully");
+  //Handling for errors.
+  app.on("error", (error)=>{
+    console.log("Error : ",error);
+    throw error;
+  })
+  //Making the listener.
+  app.listen(process.env.PORT || 8000, () => {
+    console.log(`Server is listening on PORT : ${process.env.PORT}`);
+  });
+})
+.catch((err) => {
+  console.log("Error while connecting to database -> ",err);
+})
 
