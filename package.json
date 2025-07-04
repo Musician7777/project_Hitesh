@@ -1,0 +1,25 @@
+{
+  "name": "code_4_project_setup_standard_pactices",
+  "version": "1.0.0",
+  "description": "Project ",
+  "keywords": [
+    "nothing"
+  ],
+  "license": "ISC",
+  "author": "Rishabh",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon -r dotenv/config src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}
