@@ -7,7 +7,7 @@ export const mongoDBConnection = async () => {
             `${process.env.MONGODB_URI}/${DATABASE_NAME}`
         );
         console.log(
-            `\n Connected successfully !! ${connectionInstance.connection.host}`
+            `\n -> Connected successfully !! ${connectionInstance.connection.host}`
         );
     } catch (error) {
         console.log("Database connection FAILED -> ", error);

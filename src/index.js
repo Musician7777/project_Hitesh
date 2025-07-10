@@ -10,12 +10,12 @@ const result = dotenv.config({
 if(result.error){
   throw result.error;
 }else{
-  console.log("Environment varialbes loaded -> ", result.parsed);
+  console.log("Environment varialbes loaded -> Successfully");
 }
 
 mongoDBConnection() //Its an async connection thats why giving provise.
 .then(() => {
-  console.log("Connected successfully");
+  console.log(" -> Database Connected successfully");
   //Handling for errors.
   app.on("error", (error)=>{
     console.log("Error : ",error);
@@ -23,7 +23,7 @@ mongoDBConnection() //Its an async connection thats why giving provise.
   })
   //Making the listener.
   app.listen(process.env.PORT || 8000, () => {
-    console.log(`⚙️  Server is listening on PORT : ${process.env.PORT}`);
+    console.log(` -> ⚙️  Server is listening on PORT : ${process.env.PORT}`);
   });
 })
 .catch((err) => {

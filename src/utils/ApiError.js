@@ -14,3 +14,5 @@ class ApiError extends Error{
     }
   }
 } //Understand then implement.
+
+export { ApiError };

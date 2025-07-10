@@ -18,7 +18,8 @@ const fileUpload = async (filePath) =>{
       });
     //File uploaded successfully.
     console.log("File uploaded on Cloudnary", response.url);
-    //Unlink the file after successful upload.
+    //Unlink the files after successful upload.
+    fs.unlinkSync(filePath);
     return response;
   } catch (error) {
     fs.unlinkSync(filePath); //Removes the temp file form the disk.
