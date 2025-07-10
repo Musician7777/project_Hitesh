@@ -26,3 +26,5 @@ const fileUpload = async (filePath) =>{
     return null;
   }
 }
+
+export { fileUpload };
