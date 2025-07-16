@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { User } from "../models/user.modle.js";
+import { User } from "../models/user.model.js";
 import { fileUpload } from "../utils/fileUpload.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
@@ -149,16 +149,14 @@ const logoutUser = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secured: true
-  }
+    secured: true,
+  };
 
-  res.status(200)
-  .clearCookie("accessToken", options)
-  .clearCookie("refreshToken", options)
-  .json(
-    new ApiResponse(200, {}, "User logged out !")
-  )
-
+  res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged out !"));
 });
 
 const refreshTheAccessToken = asyncHandler(async (req, res) => {
@@ -174,39 +172,47 @@ const refreshTheAccessToken = asyncHandler(async (req, res) => {
 
   const clientToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
-  if(!clientToken){
+  if (!clientToken) {
     throw new ApiError("Auto login not possible please relogin");
   }
 
   //Decode clientToken
-  const decodedClientToken = jwt.verify(clientToken, process.env.REFRESH_TOKEN_SECRET);
+  const decodedClientToken = jwt.verify(
+    clientToken,
+    process.env.REFRESH_TOKEN_SECRET
+  );
 
   const user = await User.findById(decodedClientToken?._id);
 
-  if(!user){
+  if (!user) {
     throw new ApiError("User not found invalid credientials");
   }
 
   const dbToken = user.refreshToken;
 
-  if(clientToken !== dbToken){
+  if (clientToken !== dbToken) {
     throw new ApiResponse("Tokens not matched please login again");
   }
 
   //Generates tokes.
-  const {accessToken, refreshToken} = await accessAndRefreshTokens(user);
+  const { accessToken, refreshToken } = await accessAndRefreshTokens(user);
 
   const options = {
     httpOnly: true,
-    secured: true
-  }
+    secured: true,
+  };
 
-  res.status(200)
-  .cookie("accessToken", accessToken, options)
-  .cookie("refreshToken", refreshToken, options)
-  .json(
-    new ApiResponse(200, {accessToken, refreshToken}, "Tokens refreshed successfully")
-  )
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { accessToken, refreshToken },
+        "Tokens refreshed successfully"
+      )
+    );
 });
 
 export { registerUser, loginUser, logoutUser, refreshTheAccessToken };
