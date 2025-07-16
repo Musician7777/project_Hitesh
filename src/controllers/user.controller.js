@@ -215,4 +215,53 @@ const refreshTheAccessToken = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, logoutUser, refreshTheAccessToken };
+const updatePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+
+  //Check if all the fields are there or not.
+  if([oldPassword, newPassword, confirmPassword]
+    .some((elems) => elems === "" || elems === undefined)){
+      throw new ApiError("All the fields are required.", 400);
+    }
+  
+  if(newPassword !== confirmPassword){
+    throw new ApiError("Confirm password does not match.");
+  }
+
+  const user = await User.findById(req.user?._id).select("-password");
+  const isPasswordCorrect = user.isPasswordCorrect(newPassword);
+
+  if(!isPasswordCorrect){
+    throw new ApiError("Wrong password.");
+  }
+
+  user.password = newPassword;
+  await user.save({validationBeforeSave: false});
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {}, "Password changed successfully."))
+
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+  .status(200)
+  .json(new ApiResponse(200, req.user, "User fetched successfylly."))
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  //username, fullName, email, -> indefferent controller recommended-> coverImage, avatar.
+  //Impement if needed.
+})
+
+
+export { 
+  registerUser,
+  loginUser, 
+  logoutUser, 
+  refreshTheAccessToken,
+  updatePassword,
+  getCurrentUser,
+  updateAccountDetails
+};
