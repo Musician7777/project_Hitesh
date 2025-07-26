@@ -33,13 +33,14 @@ router.route("/register").post(
 router.route("/login").post(loginUser);
 
 //Secured routes
-router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-login").post(refreshTheAccessToken);
-router.route("/update-password").post(updatePassword);
-router.route("/update-user-details").post(updateAccountDetails);
+router.route("/logout").post(verifyJWT, logoutUser);
+router.route("/update-password").post(verifyJWT, updatePassword);
+router.route("/update-user-details").post(verifyJWT, updateAccountDetails);
+
 router.route("/current-user").get(getCurrentUser);
-router.route("/channel-profile").get(getUserChannelProfile);
 router.route("/watch-history").get(userWatchHistory);
+router.route("/channel-profile/:username").get(getUserChannelProfile);
 
 
 
