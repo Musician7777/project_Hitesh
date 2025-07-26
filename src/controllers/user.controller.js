@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { fileUpload } from "../utils/fileUpload.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const registerUser = asyncHandler(async (req, res) => {
   //Complete checks and registration.
@@ -219,35 +220,37 @@ const updatePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
 
   //Check if all the fields are there or not.
-  if([oldPassword, newPassword, confirmPassword]
-    .some((elems) => elems === "" || elems === undefined)){
-      throw new ApiError("All the fields are required.", 400);
-    }
-  
-  if(newPassword !== confirmPassword){
+  if (
+    [oldPassword, newPassword, confirmPassword].some(
+      (elems) => elems === "" || elems === undefined
+    )
+  ) {
+    throw new ApiError("All the fields are required.", 400);
+  }
+
+  if (newPassword !== confirmPassword) {
     throw new ApiError("Confirm password does not match.");
   }
 
   const user = await User.findById(req.user?._id).select("-password");
   const isPasswordCorrect = user.isPasswordCorrect(newPassword);
 
-  if(!isPasswordCorrect){
+  if (!isPasswordCorrect) {
     throw new ApiError("Wrong password.");
   }
 
   user.password = newPassword;
-  await user.save({validationBeforeSave: false});
+  await user.save({ validationBeforeSave: false });
 
   return res
-  .status(200)
-  .json(new ApiResponse(200, {}, "Password changed successfully."))
-
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully."));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
-  .status(200)
-  .json(new ApiResponse(200, req.user, "User fetched successfylly."))
+    .status(200)
+    .json(new ApiResponse(200, req.user, "User fetched successfylly."));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -258,48 +261,48 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
 
-  if(!username?.trim()){
+  if (!username?.trim()) {
     throw new ApiError("Username is missing", 400);
   }
 
   const channel = await User.aggregate([
     {
       $match: {
-        username: username?.toLowerCase()
-      }
+        username: username?.toLowerCase(),
+      },
     },
     {
       $lookup: {
         from: "subscriptions",
         localField: "_id",
         foreignField: "subscriber",
-        as: "subscribers"
-      }
+        as: "subscribers",
+      },
     },
     {
       $lookup: {
         from: "subscriptions",
         localField: "_id",
         foreignField: "channel",
-        as: "subscribedTo"
-      }
+        as: "subscribedTo",
+      },
     },
     {
       $addFields: {
         subscribersCount: {
-          $size: "$subscribers"
+          $size: "$subscribers",
         },
         channelsSubscribedCount: {
-          $size: "subscribedTo"
+          $size: "subscribedTo",
         },
         isSubscribed: {
           $cond: {
-            if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
             then: true,
-            else: false
-          }
-        }
-      }
+            else: false,
+          },
+        },
+      },
     },
     {
       $project: {
@@ -310,30 +313,78 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         isSubscribed: 1,
         avatar: 1,
         coverImage: 1,
-        email: 1
-      }
-    }
+        email: 1,
+      },
+    },
   ]);
 
-  if(!channel?.length){
+  if (!channel?.length) {
     throw new ApiError("Channel does not exists", 400);
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200, channel[0] ,"Channel fetched succesfully")
-  )
+    .status(200)
+    .json(new ApiResponse(200, channel[0], "Channel fetched succesfully"));
 });
 
+const userWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [  //Internal pipeline
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [ //Internal pipeline
+                {
+                $project: {
+                  fullName: 1,
+                  username: 1,
+                  avatar: 1
+                }
+              }
+            ]
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner"
+              }
+            }
+          }
+        ],
+      },
+    },
+  ]);
 
-export { 
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, user[0].userWatchHistory, "WatchHistory fetched successfylly")
+  );
+});
+
+export {
   registerUser,
-  loginUser, 
-  logoutUser, 
+  loginUser,
+  logoutUser,
   refreshTheAccessToken,
   updatePassword,
   getCurrentUser,
   updateAccountDetails,
-  getUserChannelProfile
+  getUserChannelProfile,
+  userWatchHistory,
 };
